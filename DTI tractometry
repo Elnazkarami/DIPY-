@@ -1,0 +1,36 @@
+import nibabel as nib
+from dipy.io.streamline import load_trk
+from dipy.tracking.streamline import Streamlines
+from dipy.tracking.streamline import values_from_volume
+from dipy.tracking.utils import length
+from dipy.segment.mask import median_otsu
+from dipy.reconst.dti import TensorModel, fractional_anisotropy
+from dipy.core.gradients import gradient_table
+import numpy as np
+
+# Load diffusion data and gradient table
+data = nib.load('path_to_your_diffusion_data.nii.gz').get_fdata()
+affine = nib.load('path_to_your_diffusion_data.nii.gz').affine
+gtab = gradient_table('path_to_your_bval.bval', 'path_to_your_bvec.bvec')
+
+# Mask the data
+mask, mask_affine = median_otsu(data, vol_idx=np.arange(0, 10), median_radius=4, numpass=4)
+
+# Fit the tensor model
+ten_model = TensorModel(gtab)
+ten_fit = ten_model.fit(mask)
+
+# Calculate FA map
+fa = fractional_anisotropy(ten_fit.evals)
+fa[np.isnan(fa)] = 0
+
+# Load streamlines and extract tract-specific measures
+streamlines = load_trk("path_to_tractogram.trk", reference="path_to_your_diffusion_data.nii.gz").streamlines
+fa_values = values_from_volume(fa, streamlines, affine)
+
+# Example tractometry calculation
+tract_lengths = list(length(streamlines))
+tract_fa_profile = [np.mean(fa) for fa in fa_values]
+
+print("Tract lengths:", tract_lengths)
+print("Tract FA profiles:", tract_fa_profile)
