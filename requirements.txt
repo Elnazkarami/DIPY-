@@ -1,0 +1,8 @@
+# Versions used for the synthetic verification tests (Python 3.12.6, macOS).
+# tractometry.py requires DIPY >= 1.10 (keyword-only gradient_table(bvals, bvecs=...)).
+dipy==1.12.1
+nibabel==5.4.2
+numpy==2.5.4
+scipy==1.18.1
+matplotlib==3.11.2  # only for --overlay
+pytest==9.1.1       # only for tests
